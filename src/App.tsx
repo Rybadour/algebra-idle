@@ -7,6 +7,7 @@ import ReactTooltip from 'react-tooltip';
 import './App.scss';
 import { ReactJSXElement } from '@emotion/react/types/jsx-namespace';
 import { Equations } from './components/equations';
+import useStore from './store';
 
 function App() {
   return (
@@ -20,13 +21,15 @@ function App() {
   );
 }
 
-let lastTime: number = Date.now();
+let lastTime: number = performance.now();
 function Content() {
+  const updateEquations = useStore(s => s.equations.update);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const elapsed = Date.now() - lastTime;
-      lastTime = Date.now();
+      const elapsed = (performance.now() - lastTime) / 1000;
+      updateEquations(elapsed);
+      lastTime = performance.now();
     }, 100);
 
     return () => clearInterval(interval);

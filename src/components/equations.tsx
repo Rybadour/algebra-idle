@@ -1,34 +1,40 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import {Reorder} from "framer-motion";
+import { ClientRequest } from "http";
+import { formatNumber } from "../shared/utils";
+import useStore from "../store";
+import { pick } from "lodash";
+import shallow from "zustand/shallow";
 
 export function Equations() {
-  const [rootItems, setRootItems] = useState(["PS", "=", "X", "+", "Y"]);
-  const [xItems, setXItems] = useState(["X", "=", "Y", "/", "0.2"]);
+  const equations = useStore(s => pick(s.equations, [
+    'points', 'pointsPerSec', 'equations', 'updateEquation'
+  ]), shallow);
 
   return <Page>
     <Totals>
-      <div>1,245 Points</div>
-      <PerSec>Per sec (PS) = 5.5</PerSec>
+      <div>{formatNumber(equations.points, 0, 0)} Points</div>
+      <PerSec>Per sec (PS) = {formatNumber(equations.pointsPerSec, 0, 1)}</PerSec>
     </Totals>
 
-    <EquationDescription>Root Equation</EquationDescription>
-    <Reorder.Group as="div" axis="x" values={rootItems} onReorder={setRootItems} style={EquationStyles}>
-      {rootItems.map((item) => (
-        <Reorder.Item key={item} value={item} as="span">
-          <ItemStyled>{item}</ItemStyled>
-        </Reorder.Item>
-      ))}
-    </Reorder.Group>
-
-    <EquationDescription>Equation for X</EquationDescription>
-    <Reorder.Group as="div" axis="x" values={xItems} onReorder={setXItems} style={EquationStyles}>
-      {xItems.map((item) => (
-        <Reorder.Item key={item} value={item} as="span">
-          <ItemStyled>{item}</ItemStyled>
-        </Reorder.Item>
-      ))}
-    </Reorder.Group>
+    {Object.keys(equations.equations).map(variable => {
+      const equation = equations.equations[variable];
+      return <Reorder.Group
+        as="div"
+        axis="x"
+        values={equation}
+        onReorder={(newEquation) => equations.updateEquation(variable, newEquation)}
+        style={EquationStyles}
+      >
+        <Result>{variable} =</Result>
+        {equation.map((item) => (
+          <Reorder.Item key={item} value={item} as="span">
+            <ItemStyled>{item}</ItemStyled>
+          </Reorder.Item>
+        ))}
+      </Reorder.Group>
+    })}
   </Page>;
 }
 
@@ -41,6 +47,7 @@ const EquationStyles: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'row',
   gap: 5,
+  alignItems: 'center',
 };
 
 const EquationDescription = styled.h2`
@@ -62,6 +69,11 @@ const PerSec = styled.div`
   font-size: 22px;
   color: #BBB;
   margin-top: 10px;
+`;
+
+const Result = styled.span`
+  color: #BBB;
+  font-size: 24px;
 `;
 
 const ItemStyled = styled.div`
