@@ -5,51 +5,62 @@ import { MyCreateSlice } from "../shared/types";
 export interface EquationsSlice {
   points: number,
   pointsPerSec: number,
-  equations: Record<string, string[]>
+  equations: Record<string, string[]>,
+  variables: Record<string, number>,
+  terms: Record<string, string>,
 
   update: (elapsed: number) => void,
   updateEquation: (key: string, symbols: string[]) => void,
 }
 
-const initialEquations: EquationsSlice["equations"] = {
-  PS: ["sqrt(", "X", ")", "+", "Y"],
-  X: ["Y", "/", "0.1"],
-  Y: ["4"]
+const math = create(all);
+
+const initialTerms = {
+  sqrt1: "sqrt(",
+  rightParen1: ")",
+  x1: "X",
+  x2: "X",
+  y1: "Y",
+  y2: "Y",
+  plus1: "+",
+  multi1: "*",
+  div1: "/",
+  frac1: "0.1",
+  const1: "4",
 };
+const initialEquations: EquationsSlice["equations"] = {
+  PS: ["x2", "multi1", "sqrt1", "x1", "rightParen1", "plus1", "y1"],
+  X: ["y2", "div1", "frac1"],
+  Y: ["const1"],
+};
+const initialVariables = evaluateEquations(initialEquations, initialTerms);
 
 const createEquationsSlice: MyCreateSlice<EquationsSlice, []> = (set, get) => {
-  function evaluateEquations(equations: EquationsSlice["equations"]): number {
-    const variables: Record<string, number> = {};
-    Object.keys(equations).reverse().forEach(variable => {
-      const equation = equations[variable];
-      variables[variable] = evaluateEquation(equation, variables);
-    });
-
-    return variables["PS"];
-  }
-
   return {
     points: 0,
-    pointsPerSec: evaluateEquations(initialEquations),
+    pointsPerSec: initialVariables["PS"],
     equations: initialEquations,
+    variables: initialVariables,
+    terms: initialTerms,
 
     update: (elapsed) => {
       set({points: get().points + get().pointsPerSec * elapsed});
     },
 
-    updateEquation: (key, symbols) => {
+    updateEquation: (key, equation) => {
       const newEquations = {...get().equations};
-      newEquations[key] = symbols;
+      newEquations[key] = equation;
 
+      const variables = evaluateEquations(newEquations, get().terms);
       set({
         equations: newEquations,
-        pointsPerSec: evaluateEquations(newEquations),
+        pointsPerSec: variables["PS"],
+        variables: variables,
       })
     },
   };
 };
 
-const math = create(all);
 function evaluateEquation(equation: string[], scope: Record<string, number>) {
   try {
     const node = math.parse(equation.join(' '));
@@ -65,6 +76,15 @@ function evaluateEquation(equation: string[], scope: Record<string, number>) {
   } catch(err) {
     return 0;
   }
+}
+
+function evaluateEquations(equations: EquationsSlice["equations"], terms: Record<string, string>) {
+  const variables: Record<string, number> = {};
+  Object.keys(equations).reverse().forEach(variable => {
+    const equation = equations[variable].map(term => terms[term]);
+    variables[variable] = evaluateEquation(equation, variables);
+  });
+  return variables;
 }
 
 export default createEquationsSlice;

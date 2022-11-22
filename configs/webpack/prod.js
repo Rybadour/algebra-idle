@@ -18,19 +18,7 @@ module.exports = merge(commonConfig, {
   devtool: "source-map",
   plugins: [
     new HtmlWebpackPlugin({
-      favicon: "../public/favicon.ico",
       template: "prod-index.html",
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: "*.png",
-          context: path.resolve(__dirname, "..", "..", "public"),
-          globOptions: {
-            ignore: ["**/sprite-sheet.png"],
-          },
-        },
-      ],
     }),
   ],
 });

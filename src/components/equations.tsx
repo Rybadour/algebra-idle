@@ -9,7 +9,7 @@ import shallow from "zustand/shallow";
 
 export function Equations() {
   const equations = useStore(s => pick(s.equations, [
-    'points', 'pointsPerSec', 'equations', 'updateEquation'
+    'points', 'pointsPerSec', 'equations', 'variables', 'terms', 'updateEquation'
   ]), shallow);
 
   return <Page>
@@ -20,20 +20,25 @@ export function Equations() {
 
     {Object.keys(equations.equations).map(variable => {
       const equation = equations.equations[variable];
-      return <Reorder.Group
-        as="div"
-        axis="x"
-        values={equation}
-        onReorder={(newEquation) => equations.updateEquation(variable, newEquation)}
-        style={EquationStyles}
-      >
-        <Result>{variable} =</Result>
-        {equation.map((item) => (
-          <Reorder.Item key={item} value={item} as="span">
-            <ItemStyled>{item}</ItemStyled>
-          </Reorder.Item>
-        ))}
-      </Reorder.Group>
+      return <Equation key={variable}>
+        <Result>
+          <Value>({formatNumber(equations.variables[variable], 0, 1)})</Value>
+          <span>{variable} =</span>
+        </Result>
+        <Reorder.Group
+          as="div"
+          axis="x"
+          values={equation}
+          onReorder={(newEquation) => equations.updateEquation(variable, newEquation)}
+          style={ReorderEquationStyles}
+        >
+          {equation.map((term) => (
+            <Reorder.Item key={term} value={term} as="span">
+              <ItemStyled>{equations.terms[term]}</ItemStyled>
+            </Reorder.Item>
+          ))}
+        </Reorder.Group>
+      </Equation>
     })}
   </Page>;
 }
@@ -43,18 +48,12 @@ const Page = styled.div`
   width: 800px;
 `;
 
-const EquationStyles: React.CSSProperties = {
+const ReorderEquationStyles: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'row',
   gap: 5,
   alignItems: 'center',
 };
-
-const EquationDescription = styled.h2`
-  color: #BBB;
-  font-size: 18px;
-  margin-top: 30px;
-`;
 
 const Totals = styled.div`
   font-size: 30px;
@@ -71,16 +70,33 @@ const PerSec = styled.div`
   margin-top: 10px;
 `;
 
+const Equation = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+`;
+
 const Result = styled.span`
   color: #BBB;
   font-size: 24px;
+  width: 20%;
+  text-align: right;
 `;
+
+const Value = styled.span`
+  font-size: 16px;
+  margin-right: 5px;
+`;
+
 
 const ItemStyled = styled.div`
   padding: 4px;
   font-weight: bold;
   font-size: 20px;
   color: #EEE;
+  cursor: grab;
 
   &:hover {
     outline: 1px solid grey;
