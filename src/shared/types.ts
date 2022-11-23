@@ -2,9 +2,22 @@ import { StoreApi } from "zustand";
 
 export interface EquationUpgrade {
   id: string;
+  name: string;
+  cost: number;
+  newTerms: {
+    id: string;
+    value: string;
+  }[];
+}
+
+export interface TermUpgrade {
+  id: string;
+  name: string;
   baseCost: number;
   costGrowth: number;
-  newTerms: string[];
+  term: string;
+  baseValue: number;
+  valueGrowth: number;
 }
 
 export type Lens<T> = [set: StoreApi<T>['setState'], get: StoreApi<T>['getState']];

@@ -1,0 +1,42 @@
+import { mapValues } from "lodash";
+import termUpgradesConfig from "../config/term-upgrades";
+import { EquationUpgrade, MyCreateSlice, TermUpgrade } from "../shared/types";
+import { getExponentialValue } from "../shared/utils";
+
+type RealizedTermUpgrade = TermUpgrade & {
+  cost: number;
+  nextValue: number;
+  numBought: number;
+}
+
+export interface UpgradesSlice {
+  equationUpgrades: Record<string, boolean>,
+  termUpgrades: Record<string, RealizedTermUpgrade>,
+
+  buyUpgrade: (id: string) => void,
+}
+
+const initialTermUpgrades: Record<string, RealizedTermUpgrade> = mapValues(termUpgradesConfig, (up) => ({
+  ...up,
+  cost: up.baseCost,
+  nextValue: getExponentialValue(up.baseValue, up.valueGrowth, 1),
+  numBought: 0,
+}));
+
+const createUpgradesSlice: MyCreateSlice<UpgradesSlice, []> = (set, get) => {
+  return {
+    equationUpgrades: {},
+    termUpgrades: initialTermUpgrades,
+
+    buyUpgrade: (id) => {
+      const termUpgrades = get().termUpgrades;
+      if (termUpgrades[id]) {
+
+      } else {
+
+      }
+    },
+  };
+};
+
+export default createUpgradesSlice;
