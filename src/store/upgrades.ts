@@ -1,4 +1,5 @@
 import { mapValues } from "lodash";
+import equationUpgradesConfig from "../config/equation-upgrades";
 import termUpgradesConfig from "../config/term-upgrades";
 import { EquationUpgrade, MyCreateSlice, TermUpgrade } from "../shared/types";
 import { getExponentialValue } from "../shared/utils";
@@ -31,9 +32,12 @@ const createUpgradesSlice: MyCreateSlice<UpgradesSlice, []> = (set, get) => {
     buyUpgrade: (id) => {
       const termUpgrades = get().termUpgrades;
       if (termUpgrades[id]) {
-
-      } else {
-
+        const tu = termUpgrades[id];
+        tu.cost = getExponentialValue(tu.baseCost, tu.costGrowth, tu.numBought + 1);
+        tu.numBought++;
+        termUpgrades[id] = tu;
+      } else if (equationUpgradesConfig[id]) {
+        set({equationUpgrades: {...get().equationUpgrades, [id]: true}});
       }
     },
   };

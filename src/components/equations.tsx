@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import {Reorder} from "framer-motion";
-import { ClientRequest } from "http";
-import { formatNumber } from "../shared/utils";
-import useStore from "../store";
 import { pick } from "lodash";
 import shallow from "zustand/shallow";
+
+import { formatNumber } from "../shared/utils";
+import useStore from "../store";
 
 export function Equations() {
   const equations = useStore(s => pick(s.equations, [

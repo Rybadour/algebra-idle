@@ -5,9 +5,9 @@ import Header from './components/header/header';
 import ReactTooltip from 'react-tooltip';
 
 import './App.scss';
-import { ReactJSXElement } from '@emotion/react/types/jsx-namespace';
 import { Equations } from './components/equations';
 import useStore from './store';
+import Upgrades from './components/upgrades';
 
 function App() {
   return (
@@ -35,6 +35,7 @@ function Content() {
     return () => clearInterval(interval);
   }, []);
   return <div className="content">
+    <Upgrades></Upgrades>
     <Equations></Equations>
   </div>;
 }
