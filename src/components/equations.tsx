@@ -7,6 +7,11 @@ import shallow from "zustand/shallow";
 import { formatNumber } from "../shared/utils";
 import useStore from "../store";
 
+const TINY_SYMBOLS = ['+', '×']
+const REPLACE_SYMBOLS: Record<string, string> = {
+  '*': '×',
+};
+
 export function Equations() {
   const equations = useStore(s => pick(s.equations, [
     'points', 'pointsPerSec', 'equations', 'variables', 'terms', 'updateEquation'
@@ -32,11 +37,13 @@ export function Equations() {
           onReorder={(newEquation) => equations.updateEquation(variable, newEquation)}
           style={ReorderEquationStyles}
         >
-          {equation.map((term) => (
-            <Reorder.Item key={term} value={term} as="span">
-              <ItemStyled>{equations.terms[term]}</ItemStyled>
-            </Reorder.Item>
-          ))}
+          {equation.map((term) => {
+            const termSymbol = equations.terms[term];
+            const displayed = REPLACE_SYMBOLS[termSymbol] ?? termSymbol;
+            return <Reorder.Item key={term} value={term} as="span">
+              <ItemStyled isTinySymbol={TINY_SYMBOLS.includes(displayed)}>{displayed}</ItemStyled>
+            </Reorder.Item>;
+          })}
         </Reorder.Group>
       </Equation>
     })}
@@ -91,10 +98,11 @@ const Value = styled.span`
 `;
 
 
-const ItemStyled = styled.div`
+const ItemStyled = styled.div<{isTinySymbol: boolean}>`
   padding: 4px;
   font-weight: bold;
-  font-size: 20px;
+  font-size: ${props => props.isTinySymbol ? '26px' : '20px'};
+  vertical-align: middle;
   color: #EEE;
   cursor: grab;
 
