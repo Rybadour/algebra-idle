@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import {Reorder} from "framer-motion";
-import { eq, pick } from "lodash";
+import { pick } from "lodash";
 import shallow from "zustand/shallow";
 
 import { formatNumber } from "../shared/utils";
@@ -11,6 +11,11 @@ import { useDrop } from "react-dnd";
 interface TermItem {
   id: string;
 }
+
+const TINY_SYMBOLS = ['+', '×']
+const REPLACE_SYMBOLS: Record<string, string> = {
+  '*': '×',
+};
 
 export function Equations() {
   const equations = useStore(s => pick(s.equations, [
@@ -69,11 +74,13 @@ function Equation(props: EquationProps) {
       onReorder={(newEquation) => equations.updateEquation(props.variable, newEquation)}
       style={ReorderEquationStyles}
     >
-      {props.equation.map((term) => (
-        <Reorder.Item key={term} value={term} as="span">
-          <ItemStyled>{equations.terms[term]}</ItemStyled>
-        </Reorder.Item>
-      ))}
+      {props.equation.map((term) => {
+        const termSymbol = equations.terms[term];
+        const displayed = REPLACE_SYMBOLS[termSymbol] ?? termSymbol;
+        return <Reorder.Item key={term} value={term} as="span">
+          <ItemStyled isTinySymbol={TINY_SYMBOLS.includes(displayed)}>{displayed}</ItemStyled>
+        </Reorder.Item>;
+      })}
     </Reorder.Group>
   </Equation$>;
 }
@@ -126,10 +133,11 @@ const Value = styled.span`
 `;
 
 
-const ItemStyled = styled.div`
+const ItemStyled = styled.div<{isTinySymbol: boolean}>`
   padding: 4px;
   font-weight: bold;
-  font-size: 20px;
+  font-size: ${props => props.isTinySymbol ? '26px' : '20px'};
+  vertical-align: middle;
   color: #EEE;
   cursor: grab;
 
