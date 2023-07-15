@@ -11,6 +11,7 @@ export interface EquationsSlice {
 
   update: (elapsed: number) => void,
   updateEquation: (key: string, symbols: string[]) => void,
+  addTermToEquation: (key: string, newSymbol: string) => void,
 }
 
 const math = create(all);
@@ -23,13 +24,14 @@ const initialTerms = {
   y1: "Y",
   y2: "Y",
   plus1: "+",
+  plus2: "+",
   multi1: "*",
   div1: "/",
   frac1: "0.1",
   const1: "4",
 };
 const initialEquations: EquationsSlice["equations"] = {
-  PS: ["x2", "multi1", "sqrt1", "x1", "rightParen1", "plus1", "y1"],
+  PS: ["x2", "multi1", "sqrt1", "x1", "rightParen1"],
   X: ["y2", "div1", "frac1"],
   Y: ["const1"],
 };
@@ -58,6 +60,18 @@ const createEquationsSlice: MyCreateSlice<EquationsSlice, []> = (set, get) => {
         variables: variables,
       })
     },
+
+    addTermToEquation: (key, newSymbol) => {
+      const newEquations = {...get().equations};
+      newEquations[key] = newEquations[key].concat([newSymbol]);
+
+      const variables = evaluateEquations(newEquations, get().terms);
+      set({
+        equations: newEquations,
+        pointsPerSec: variables["PS"],
+        variables,
+      });
+    }
   };
 };
 

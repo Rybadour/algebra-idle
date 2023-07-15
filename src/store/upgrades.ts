@@ -1,7 +1,7 @@
 import { mapValues } from "lodash";
 import equationUpgradesConfig from "../config/equation-upgrades";
 import termUpgradesConfig from "../config/term-upgrades";
-import { EquationUpgrade, MyCreateSlice, TermUpgrade } from "../shared/types";
+import { MyCreateSlice, TermUpgrade } from "../shared/types";
 import { getExponentialValue } from "../shared/utils";
 
 type RealizedTermUpgrade = TermUpgrade & {

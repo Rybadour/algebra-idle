@@ -18,7 +18,7 @@ export default function Upgrades() {
   ), shallow);
 
   return <Section>
-    <h2>Upgrades</h2>
+    <Title>Upgrades</Title>
 
     <UpgradeList>
       {Object.entries(equationUpgradesConfig).map(([eu, upgrade]) => 
@@ -37,14 +37,18 @@ export default function Upgrades() {
 
 function Upgrade(props: {upgrade: GenericUpgrade, onClick: (id: string) => void}) {
   return <UpgradeButton>
-    <strong>{props.upgrade.name}</strong>
-    <strong>{props.upgrade.cost}</strong>
+    <UpgradeName>{props.upgrade.name}</UpgradeName>
+    <UpgradeCost>{props.upgrade.cost} points</UpgradeCost>
   </UpgradeButton>;
 }
 
 const Section = styled.div`
   margin-top: 20px;
   width: 300px;
+`;
+
+const Title = styled.h2`
+  color: white;
 `;
 
 const UpgradeList = styled.div`
@@ -55,4 +59,14 @@ const UpgradeList = styled.div`
 const UpgradeButton = styled.button`
   height: 80px;
   padding: 6px;
+  position: relative;
+`;
+
+const UpgradeName = styled.strong`
+`;
+
+const UpgradeCost = styled.span`
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
 `;

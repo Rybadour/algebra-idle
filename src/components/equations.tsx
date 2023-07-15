@@ -1,11 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import {Reorder} from "framer-motion";
-import { pick } from "lodash";
+import { eq, pick } from "lodash";
 import shallow from "zustand/shallow";
 
 import { formatNumber } from "../shared/utils";
 import useStore from "../store";
+import { useDrop } from "react-dnd";
+
+interface TermItem {
+  id: string;
+}
 
 export function Equations() {
   const equations = useStore(s => pick(s.equations, [
@@ -20,27 +25,57 @@ export function Equations() {
 
     {Object.keys(equations.equations).map(variable => {
       const equation = equations.equations[variable];
-      return <Equation key={variable}>
-        <Result>
-          <Value>({formatNumber(equations.variables[variable], 0, 1)})</Value>
-          <span>{variable} =</span>
-        </Result>
-        <Reorder.Group
-          as="div"
-          axis="x"
-          values={equation}
-          onReorder={(newEquation) => equations.updateEquation(variable, newEquation)}
-          style={ReorderEquationStyles}
-        >
-          {equation.map((term) => (
-            <Reorder.Item key={term} value={term} as="span">
-              <ItemStyled>{equations.terms[term]}</ItemStyled>
-            </Reorder.Item>
-          ))}
-        </Reorder.Group>
-      </Equation>
+      return <Equation 
+        key={variable}
+        equation={equation}
+        variable={variable}
+        variableValue={equations.variables[variable]}
+      />;
     })}
   </Page>;
+}
+
+interface EquationProps {
+  equation: string[],
+  variable: string,
+  variableValue: number,
+}
+
+function Equation(props: EquationProps) {
+  const equations = useStore(s => pick(s.equations, [
+    'terms', 'updateEquation', 'addTermToEquation'
+  ]), shallow);
+
+  const [{ canDrop, isOver }, drop] = useDrop(() => ({
+    accept: 'term',
+    drop: (term: TermItem) => {
+      equations.addTermToEquation(props.variable, term.id);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  }));
+
+  return <Equation$ ref={drop}>
+    <Result>
+      <Value>({formatNumber(props.variableValue, 0, 1)})</Value>
+      <span>{props.variable} =</span>
+    </Result>
+    <Reorder.Group
+      as="div"
+      axis="x"
+      values={props.equation}
+      onReorder={(newEquation) => equations.updateEquation(props.variable, newEquation)}
+      style={ReorderEquationStyles}
+    >
+      {props.equation.map((term) => (
+        <Reorder.Item key={term} value={term} as="span">
+          <ItemStyled>{equations.terms[term]}</ItemStyled>
+        </Reorder.Item>
+      ))}
+    </Reorder.Group>
+  </Equation$>;
 }
 
 const Page = styled.div`
@@ -70,7 +105,7 @@ const PerSec = styled.div`
   margin-top: 10px;
 `;
 
-const Equation = styled.div`
+const Equation$ = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
