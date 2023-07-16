@@ -1,10 +1,10 @@
 import { mapValues } from "lodash";
 import equationUpgradesConfig from "../config/equation-upgrades";
 import termUpgradesConfig from "../config/term-upgrades";
-import { MyCreateSlice, TermUpgrade } from "../shared/types";
+import { MyCreateSlice, ITermUpgrade } from "../shared/types";
 import { getExponentialValue } from "../shared/utils";
 
-type RealizedTermUpgrade = TermUpgrade & {
+type RealizedTermUpgrade = ITermUpgrade & {
   cost: number;
   nextValue: number;
   numBought: number;

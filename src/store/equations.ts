@@ -1,13 +1,15 @@
 import { create, all, OperatorNode } from "mathjs";
 
-import { MyCreateSlice } from "../shared/types";
+import { IRealizedTerm, MyCreateSlice } from "../shared/types";
+import { TermType, terms } from "../config/terms";
 
 export interface EquationsSlice {
   points: number,
   pointsPerSec: number,
   equations: Record<string, string[]>,
   variables: Record<string, number>,
-  terms: Record<string, string>,
+  terms: Record<string, IRealizedTerm>,
+  unusedTerms: string[],
 
   update: (elapsed: number) => void,
   updateEquation: (key: string, symbols: string[]) => void,
@@ -16,26 +18,31 @@ export interface EquationsSlice {
 
 const math = create(all);
 
-const initialTerms = {
-  sqrt1: "sqrt(",
-  rightParen1: ")",
-  x1: "X",
-  x2: "X",
-  y1: "Y",
-  y2: "Y",
-  plus1: "+",
-  plus2: "+",
-  multi1: "*",
-  div1: "/",
-  frac1: "0.1",
-  const1: "4",
+const termCounts: Record<TermType, number> = {
+  x: 0,
+  y: 0,
+  plus: 0,
+  multi: 0,
+  div: 0,
+  sqrt: 0,
+  rightParen: 0,
+  const: 0,
 };
+const initialTerms = [
+  createConstant(1),
+  createTerm('plus'),
+  createTerm('y'),
+];
+const initialTermMap: Record<string, IRealizedTerm> = {};
+initialTerms.forEach((term) => {
+  initialTermMap[term.id] = term;
+})
 const initialEquations: EquationsSlice["equations"] = {
-  PS: ["x2", "multi1", "sqrt1", "x1", "rightParen1"],
-  X: ["y2", "div1", "frac1"],
-  Y: ["const1"],
+  PS: [initialTerms[0].id],
+  X: [],
+  Y: [],
 };
-const initialVariables = evaluateEquations(initialEquations, initialTerms);
+const initialVariables = evaluateEquations(initialEquations, initialTermMap);
 
 const createEquationsSlice: MyCreateSlice<EquationsSlice, []> = (set, get) => {
   return {
@@ -43,7 +50,8 @@ const createEquationsSlice: MyCreateSlice<EquationsSlice, []> = (set, get) => {
     pointsPerSec: initialVariables["PS"],
     equations: initialEquations,
     variables: initialVariables,
-    terms: initialTerms,
+    terms: initialTermMap,
+    unusedTerms: [initialTerms[1].id, initialTerms[2].id],
 
     update: (elapsed) => {
       set({points: get().points + get().pointsPerSec * elapsed});
@@ -92,13 +100,28 @@ function evaluateEquation(equation: string[], scope: Record<string, number>) {
   }
 }
 
-function evaluateEquations(equations: EquationsSlice["equations"], terms: Record<string, string>) {
+function evaluateEquations(equations: EquationsSlice["equations"], terms: Record<string, IRealizedTerm>) {
   const variables: Record<string, number> = {};
   Object.keys(equations).reverse().forEach(variable => {
-    const equation = equations[variable].map(term => terms[term]);
+    const equation = equations[variable].map(term => terms[term].functionalTerm);
     variables[variable] = evaluateEquation(equation, variables);
   });
   return variables;
+}
+
+function createTerm(type: TermType): IRealizedTerm {
+  termCounts[type] += 1;
+  return {
+    type,
+    id: type + "-" + termCounts[type],
+    ...terms[type],
+  }
+}
+
+function createConstant(initialValue: number) {
+  const term = createTerm("const");
+  term.functionalTerm = initialValue + "";
+  return term;
 }
 
 export default createEquationsSlice;

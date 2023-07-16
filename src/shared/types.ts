@@ -1,6 +1,7 @@
 import { StoreApi } from "zustand";
+import { TermType } from "../config/terms";
 
-export interface EquationUpgrade {
+export interface IEquationUpgrade {
   id: string;
   name: string;
   cost: number;
@@ -10,7 +11,7 @@ export interface EquationUpgrade {
   }[];
 }
 
-export interface TermUpgrade {
+export interface ITermUpgrade {
   id: string;
   name: string;
   baseCost: number;
@@ -18,6 +19,18 @@ export interface TermUpgrade {
   term: string;
   baseValue: number;
   valueGrowth: number;
+}
+
+export interface ITerm {
+  label: string;
+  functionalTerm: string;
+  visualTerm?: string;
+  closingTerm?: string;
+}
+
+export interface IRealizedTerm extends ITerm {
+  type: TermType;
+  id: string;
 }
 
 export type Lens<T> = [set: StoreApi<T>['setState'], get: StoreApi<T>['getState']];

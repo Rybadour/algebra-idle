@@ -1,6 +1,6 @@
-import { TermUpgrade } from "../shared/types";
+import { ITermUpgrade } from "../shared/types";
 
-const termUpgrades: Record<string, TermUpgrade> = {
+const termUpgrades: Record<string, ITermUpgrade> = {
   const1: {
     id: '',
     name: 'Bigger Number Please!',

@@ -1,12 +1,23 @@
-import { ConnectDragPreview, ConnectDragSource, useDrag } from "react-dnd";
+import { useDrag } from "react-dnd";
 import styled from "styled-components";
+import shallow from "zustand/shallow";
+import useStore from "../store";
+import { pick } from "lodash";
 
 export function Terms() {
+  const equations = useStore(s => pick(s.equations, [
+    'unusedTerms', 'terms'
+  ]), shallow);
+
   return <TermsSection>
     <Title>Variables and Operators</Title>
 
-    <Term label="ADD" term="plus2"></Term>
-    <Term label="Y Variabl" term="y1"></Term>
+    <TermList>
+      {equations.unusedTerms.map((t) => {
+        const term = equations.terms[t];
+        return <Term key={t} label={term.label} term={t}></Term>;
+      })}
+    </TermList>
   </TermsSection>
 }
 
@@ -37,8 +48,13 @@ const Title = styled.h2`
   color: white;
 `;
 
-const Term$ = styled.span`
-  color: white;
+const TermList = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const Term$ = styled.div`
+  color: #CCC;
   padding: 3px;
   cursor: grab;
   :hover {

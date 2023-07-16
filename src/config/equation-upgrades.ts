@@ -1,6 +1,6 @@
-import { EquationUpgrade } from "../shared/types";
+import { IEquationUpgrade } from "../shared/types";
 
-const equationUpgrades: Record<string, EquationUpgrade> = {
+const equationUpgrades: Record<string, IEquationUpgrade> = {
   first: {
     id: '',
     name: 'Gotta start somewhere',

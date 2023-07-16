@@ -74,10 +74,10 @@ function Equation(props: EquationProps) {
       onReorder={(newEquation) => equations.updateEquation(props.variable, newEquation)}
       style={ReorderEquationStyles}
     >
-      {props.equation.map((term) => {
-        const termSymbol = equations.terms[term];
-        const displayed = REPLACE_SYMBOLS[termSymbol] ?? termSymbol;
-        return <Reorder.Item key={term} value={term} as="span">
+      {props.equation.map((t) => {
+        const term = equations.terms[t];
+        const displayed = term.visualTerm ?? term.functionalTerm;
+        return <Reorder.Item key={t} value={t} as="span">
           <ItemStyled isTinySymbol={TINY_SYMBOLS.includes(displayed)}>{displayed}</ItemStyled>
         </Reorder.Item>;
       })}
