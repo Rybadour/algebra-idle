@@ -32,6 +32,7 @@ const initialTerms = [
   createConstant(1),
   createTerm('plus'),
   createTerm('y'),
+  createConstant(5),
 ];
 const initialTermMap: Record<string, IRealizedTerm> = {};
 initialTerms.forEach((term) => {
@@ -51,7 +52,7 @@ const createEquationsSlice: MyCreateSlice<EquationsSlice, []> = (set, get) => {
     equations: initialEquations,
     variables: initialVariables,
     terms: initialTermMap,
-    unusedTerms: [initialTerms[1].id, initialTerms[2].id],
+    unusedTerms: [initialTerms[1].id, initialTerms[2].id, initialTerms[3].id],
 
     update: (elapsed) => {
       set({points: get().points + get().pointsPerSec * elapsed});

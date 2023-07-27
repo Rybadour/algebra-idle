@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import styled from "styled-components";
 import {Reorder} from "framer-motion";
 import { pick } from "lodash";
@@ -6,10 +6,12 @@ import shallow from "zustand/shallow";
 
 import { formatNumber } from "../shared/utils";
 import useStore from "../store";
-import { useDrop } from "react-dnd";
+import { useDrag, useDrop } from "react-dnd";
+import { IRealizedTerm } from "../shared/types";
 
 interface TermItem {
   id: string;
+  index: number;
 }
 
 const TINY_SYMBOLS = ['+', '×']
@@ -51,6 +53,12 @@ function Equation(props: EquationProps) {
     'terms', 'updateEquation', 'addTermToEquation'
   ]), shallow);
 
+  const moveTerm = useCallback((dragIndex, hoverIndex) => {
+    const newTerms = [...props.equation];
+    [newTerms[hoverIndex], newTerms[dragIndex]] = [newTerms[dragIndex], newTerms[hoverIndex]];
+    equations.updateEquation(props.variable, newTerms);
+  }, [props.equation, props.variable, equations]);
+
   const [{ canDrop, isOver }, drop] = useDrop(() => ({
     accept: 'term',
     drop: (term: TermItem) => {
@@ -67,22 +75,86 @@ function Equation(props: EquationProps) {
       <Value>({formatNumber(props.variableValue, 0, 1)})</Value>
       <span>{props.variable} =</span>
     </Result>
-    <Reorder.Group
-      as="div"
-      axis="x"
-      values={props.equation}
-      onReorder={(newEquation) => equations.updateEquation(props.variable, newEquation)}
-      style={ReorderEquationStyles}
-    >
-      {props.equation.map((t) => {
-        const term = equations.terms[t];
-        const displayed = term.visualTerm ?? term.functionalTerm;
-        return <Reorder.Item key={t} value={t} as="span">
-          <ItemStyled isTinySymbol={TINY_SYMBOLS.includes(displayed)}>{displayed}</ItemStyled>
-        </Reorder.Item>;
-      })}
-    </Reorder.Group>
+    <TermList>
+    {props.equation.map((t, i) => {
+      const term = equations.terms[t];
+      const displayed = term.visualTerm ?? term.functionalTerm;
+      return <Term key={t} index={i} term={term} displayedTerm={displayed} moveTerm={moveTerm} />;
+    })}
+    </TermList>
   </Equation$>;
+}
+
+interface ITermProps {
+  index: number;
+  term: IRealizedTerm;
+  displayedTerm: string;
+  moveTerm: (dragIndex: number, hoverIndex: number) => void,
+}
+
+function Term(props: ITermProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const [{ handlerId }, drop] = useDrop<TermItem, TermItem, {handlerId: string | Symbol | null}>({
+    accept: 'selfterm',
+    collect: (monitor) => {
+      return {
+        handlerId: monitor.getHandlerId(),
+      }
+    },
+    hover: (item, monitor) => {
+      if (!ref.current) {
+        return
+      }
+      const dragIndex = item.index
+      const hoverIndex = props.index
+      // Don't replace items with themselves
+      if (dragIndex === hoverIndex) {
+        return
+      }
+      // Determine rectangle on screen
+      const hoverBoundingRect = ref.current?.getBoundingClientRect()
+      // Get vertical middle
+      const hoverMiddleY =
+        (hoverBoundingRect.right - hoverBoundingRect.left) / 2
+      // Determine mouse position
+      const clientOffset = monitor.getClientOffset()
+      if (!clientOffset) return;
+
+      // Get pixels to the top
+      const hoverClientY = clientOffset.x - hoverBoundingRect.left
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+      // Dragging downwards
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return
+      }
+      // Dragging upwards
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return
+      }
+      // Time to actually perform the action
+      props.moveTerm(dragIndex, hoverIndex);
+      // Note: we're mutating the monitor item here!
+      // Generally it's better to avoid mutations,
+      // but it's good here for the sake of performance
+      // to avoid expensive index searches.
+      item.index = hoverIndex
+    },
+  });
+  const [{ isDragging }, drag] = useDrag({
+    type: 'selfterm',
+    item: () => {
+      return { id: props.term.id, index: props.index };
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  })
+  const opacity = isDragging ? 0 : 1
+  drag(drop(ref))
+  return <ItemStyled ref={ref} isTinySymbol={TINY_SYMBOLS.includes(props.displayedTerm)}>{props.displayedTerm}</ItemStyled>
 }
 
 const Page = styled.div`
@@ -145,4 +217,8 @@ const ItemStyled = styled.div<{isTinySymbol: boolean}>`
     outline: 1px solid grey;
     border-radius: 3px;
   }
+`;
+
+const TermList = styled.div`
+  display: flex;
 `;
